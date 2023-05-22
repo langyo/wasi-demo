@@ -24,8 +24,8 @@ fn hello_world() -> Result<()> {
     Ok(())
 }
 
-// #[tokio::main]
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     Command::new("cargo")
         .args(&[
             "build",
@@ -48,9 +48,9 @@ fn main() -> Result<()> {
         .spawn()?
         .wait_with_output()?;
 
-    hello_world()?;
+    // hello_world()?;
 
-    // fs_test::fs_test().await?;
+    fs_test::fs_test().await?;
 
     Ok(())
 }
