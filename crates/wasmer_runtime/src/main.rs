@@ -1,23 +1,12 @@
 use anyhow::Result;
-use std::{io::Read, path::Path, process::Command};
+use std::{io::Read, process::Command};
 
 use wasmer::{Module, Store};
 use wasmer_wasix::{Pipe, WasiEnv};
 
-fn main() -> Result<()> {
-    if !Path::new("target/wasm32-wasi/debug/wasi_hello_world.wasm").exists() {
-        let output = Command::new("cargo")
-            .args(&[
-                "build",
-                "--package",
-                "wasi_hello_world",
-                "--target",
-                "wasm32-wasi",
-            ])
-            .output()
-            .expect("failed to execute process");
-        println!("cargo build: {:?}", output);
-    }
+mod fs_test;
+
+fn hello_world() -> Result<()> {
     let wasm_bytes = std::fs::read("target/wasm32-wasi/debug/wasi_hello_world.wasm")?;
 
     let mut store = Store::default();
@@ -31,6 +20,37 @@ fn main() -> Result<()> {
     let mut buf = String::new();
     stdout_rx.read_to_string(&mut buf).unwrap();
     println!("{}", buf);
+
+    Ok(())
+}
+
+// #[tokio::main]
+fn main() -> Result<()> {
+    Command::new("cargo")
+        .args(&[
+            "build",
+            "--package",
+            "wasi_hello_world",
+            "--target",
+            "wasm32-wasi",
+        ])
+        .spawn()?
+        .wait_with_output()?;
+
+    Command::new("cargo")
+        .args(&[
+            "build",
+            "--package",
+            "wasi_fs_demo",
+            "--target",
+            "wasm32-wasi",
+        ])
+        .spawn()?
+        .wait_with_output()?;
+
+    hello_world()?;
+
+    // fs_test::fs_test().await?;
 
     Ok(())
 }

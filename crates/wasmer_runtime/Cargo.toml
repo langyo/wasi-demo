@@ -5,5 +5,7 @@ version = "0.1.0"
 
 [dependencies]
 anyhow = "*"
+tokio = "*"
+virtual-fs = "*"
 wasmer = "*"
 wasmer-wasix = "*"
