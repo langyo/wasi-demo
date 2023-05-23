@@ -1,24 +1,12 @@
 use anyhow::Result;
-use std::{path::Path, process::Command};
+use std::process::Command;
 
 use wasmtime::*;
 use wasmtime_wasi::sync::WasiCtxBuilder;
 
-fn main() -> Result<()> {
-    if !Path::new("target/wasm32-wasi/debug/wasi_hello_world.wasm").exists() {
-        let output = Command::new("cargo")
-            .args(&[
-                "build",
-                "--package",
-                "wasi_hello_world",
-                "--target",
-                "wasm32-wasi",
-            ])
-            .output()
-            .expect("failed to execute process");
-        println!("cargo build: {:?}", output);
-    }
+mod fs_test;
 
+fn hello_world() -> Result<()> {
     let engine = Engine::default();
     let mut linker = Linker::new(&engine);
     wasmtime_wasi::add_to_linker(&mut linker, |s| s)?;
@@ -35,6 +23,36 @@ fn main() -> Result<()> {
         .get_default(&mut store, "")?
         .typed::<(), ()>(&store)?
         .call(&mut store, ())?;
+
+    Ok(())
+}
+
+fn main() -> Result<()> {
+    Command::new("cargo")
+        .args(&[
+            "build",
+            "--package",
+            "wasi_hello_world",
+            "--target",
+            "wasm32-wasi",
+        ])
+        .spawn()?
+        .wait_with_output()?;
+
+    Command::new("cargo")
+        .args(&[
+            "build",
+            "--package",
+            "wasi_fs_demo",
+            "--target",
+            "wasm32-wasi",
+        ])
+        .spawn()?
+        .wait_with_output()?;
+
+    hello_world()?;
+
+    fs_test::fs_test()?;
 
     Ok(())
 }
